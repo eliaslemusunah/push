@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
                 },
                 child: Text('Agregar Banda'),
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.deepPurple.shade400,
+                  backgroundColor: Colors.deepPurple.shade400,
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   textStyle: TextStyle(fontSize: 18),
                 ),
@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
                 },
                 child: Text('Ver Bandas'),
                 style: ElevatedButton.styleFrom(
-                  primary: const Color.fromARGB(255, 100, 24, 232),
+                  backgroundColor: const Color.fromARGB(255, 100, 24, 232),
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   textStyle: TextStyle(fontSize: 18),
                 ),
