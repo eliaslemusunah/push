@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddBandPage extends StatefulWidget {
   @override
@@ -11,12 +14,24 @@ class _AddBandPageState extends State<AddBandPage> {
   final TextEditingController _albumNameController = TextEditingController();
   final TextEditingController _releaseYearController = TextEditingController();
 
+  File? _albumImage;
+
   @override
   void dispose() {
     _bandNameController.dispose();
     _albumNameController.dispose();
     _releaseYearController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAlbumImage() async {
+    final pickedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      setState(() {
+        _albumImage = File(pickedImage.path);
+      });
+    }
   }
 
   @override
@@ -78,16 +93,36 @@ class _AddBandPageState extends State<AddBandPage> {
                   ),
                 ),
               ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _pickAlbumImage,
+                child: Text('Seleccionar Imagen del Álbum'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple.shade400,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  textStyle: TextStyle(fontSize: 18),
+                ),
+              ),
+              SizedBox(height: 16),
+              _albumImage == null
+                  ? Image.asset(
+                      'assets/images/noimage.png',
+                      height: 200,
+                    )
+                  : Image.file(
+                      _albumImage!,
+                      height: 200,
+                    ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   addBand(_bandNameController.text, _albumNameController.text,
-                      int.parse(_releaseYearController.text));
+                      int.parse(_releaseYearController.text), _albumImage);
                   Navigator.pop(context);
                 },
                 child: Text('Agregar Banda'),
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.deepPurple.shade400,
+                  backgroundColor: Colors.deepPurple.shade400,
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   textStyle: TextStyle(fontSize: 18),
                 ),
@@ -99,14 +134,23 @@ class _AddBandPageState extends State<AddBandPage> {
     );
   }
 
-  Future<void> addBand(String bandName, String albumName, int releaseYear) async {
-  final CollectionReference bandsRef = FirebaseFirestore.instance.collection('bands');
-  await bandsRef.add({
-    'bandName': bandName,
-    'albumName': albumName,
-    'releaseYear': releaseYear,
-    'votes': 0,
-    'voted': false,
-  });
-}
+  Future<void> addBand(String bandName, String albumName, int releaseYear, File? albumImage) async {
+    final CollectionReference bandsRef = FirebaseFirestore.instance.collection('bands');
+    String albumImageUrl = '';
+
+    if (albumImage != null) {
+      final storageRef = FirebaseStorage.instance.ref().child('album_images/${albumName.replaceAll(' ', '_')}.jpg');
+      await storageRef.putFile(albumImage);
+      albumImageUrl = await storageRef.getDownloadURL();
+    }
+
+    await bandsRef.add({
+      'bandName': bandName,
+      'albumName': albumName,
+      'releaseYear': releaseYear,
+      'votes': 0,
+      'voted': false,
+      'albumImageUrl': albumImageUrl,
+    });
+  }
 }
